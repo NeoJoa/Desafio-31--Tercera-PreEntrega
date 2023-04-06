@@ -4,6 +4,7 @@ import userModel from "../dao/models/users.model.js";
 import jwt from "jsonwebtoken";
 import { passportCallback } from "../utils.js";
 import config from "../config/config.js";
+import ClientUser from "../dao/DTOs/ClientUser.js";
 
 const router = Router();
 
@@ -48,13 +49,7 @@ router.post(
     session: false,
   }),
   async (req, res) => {
-    const serializeUser = {
-      id: req.user._id,
-      name: `${req.user.firstName} ${req.user.lastName}`,
-      role: req.user.role,
-      email: req.user.email,
-    };
-    const token = jwt.sign(serializeUser, config.cookieSecret, {
+    const token = jwt.sign(req.user, config.cookieSecret, {
       expiresIn: "1h",
     });
     res.cookie("coderCookieToken", token, {
@@ -64,7 +59,7 @@ router.post(
     res.send({
       status: "success",
       message: "Login success",
-      payload: serializeUser,
+      payload: req.user,
     });
   }
 );
@@ -90,8 +85,8 @@ router.post("/recover", async (req, res) => {
 });
 
 router.get("/current", passportCallback("jwt"), (req, res) => {
-  console.log("Mensaje desde el session jwt", req.info);
-  res.send(req.user);
+  const user = new ClientUser(req.user);
+  res.send(user);
 });
 
 export default router;

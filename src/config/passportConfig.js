@@ -3,9 +3,17 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { createHash, isCorrect } from "../utils.js";
 import githubService from "passport-github2";
-import UsersManager from "../dao/dbManager/UsersManager.js";
+import { UsersService } from "../dao/repositories/index.js";
+import nodemailer from "nodemailer";
 
-const usersManager = new UsersManager();
+const transport = nodemailer.createTransport({
+  service: "gmail",
+  port: 5087,
+  auth: {
+    user: "joaquinaquino999@gmail.com",
+    pass: "sstlqracohnpmkgz",
+  },
+});
 
 const cookieExtractor = (req) => {
   let token = null;
@@ -21,7 +29,7 @@ const initPassport = () => {
     new JwtStrategy(
       {
         jwtFromRequest: ExtractJwt.fromExtractors([cookieExtractor]),
-        secretOrKey: "secretCode",
+        secretOrKey: "coderSecret",
       },
       async (jwt_payload, done) => {
         try {
@@ -45,7 +53,7 @@ const initPassport = () => {
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
-          const user = await usersManager.getUserBy({
+          const user = await UsersService.getBy({
             email: profile._json.email,
           });
           if (!user) {
@@ -55,7 +63,7 @@ const initPassport = () => {
               email: profile._json.email,
               password: "",
             };
-            const result = await usersManager.addUser(newUser);
+            const result = await UsersService.post(newUser);
             return done(null, result);
           } else {
             return done(null, user);
@@ -74,7 +82,7 @@ const initPassport = () => {
       async (req, email, password, done) => {
         const { firstName, lastName, age } = req.body;
         try {
-          const exist = await usersManager.getUserBy({ email });
+          const exist = await UsersService.getBy({ email });
           if (exist) {
             return done(null, false, { message: "The user already exist" });
           }
@@ -86,7 +94,15 @@ const initPassport = () => {
             email,
             password: createHash(password),
           };
-          const result = await usersManager.addUser(newUser);
+
+          await transport.sendMail({
+            from: "joaquinaquino999@gmail.com",
+            to: `${email}`,
+            subject: "Email de prueba desde servidor backend",
+            text: `Usuario registrado correctamente. \n Credenciales: \n Email:${email} \n Password: ${password}`,
+          });
+
+          const result = await UsersService.post(newUser);
           return done(null, result, { message: "User created successfully" });
         } catch (error) {
           return done("Error getting user" + error);
@@ -112,7 +128,7 @@ const initPassport = () => {
             };
             return done(null, user);
           }
-          const user = await usersManager.getUserBy({ email });
+          const user = await UsersService.getBy({ email });
           if (!user) {
             return done(null, false, { message: "Email not registered" });
           }
@@ -131,7 +147,7 @@ const initPassport = () => {
   });
 
   passport.deserializeUser(async (id, done) => {
-    const user = await usersManager.getUserBy({ _id: id });
+    const user = await UsersService.getBy({ _id: id });
     done(null, user);
   });
 };

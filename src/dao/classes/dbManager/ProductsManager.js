@@ -1,8 +1,8 @@
-import productModel from "../models/products.model.js";
+import productModel from "../../models/products.model.js";
 export default class ProductManager {
   constructor() {}
 
-  async getProducts(query, limit = 10, page = 1, sort) {
+  async getAll(query, limit = 10, page = 1, sort) {
     try {
       if (query) query = JSON.parse(query);
       const result = await productModel.paginate(query, {
@@ -47,7 +47,7 @@ export default class ProductManager {
     }
   }
 
-  async addProduct(product) {
+  async post(product) {
     try {
       return await productModel.create(product);
     } catch (error) {
@@ -58,7 +58,7 @@ export default class ProductManager {
     }
   }
 
-  async getProductById(id) {
+  async getById(id) {
     try {
       const product = await productModel.findById(id);
       return product === null
@@ -75,7 +75,7 @@ export default class ProductManager {
     }
   }
 
-  async updateProduct(id, object) {
+  async putById(id, object) {
     try {
       const productUpdated = await productModel.findByIdAndUpdate(id, object, {
         new: true,
@@ -94,7 +94,7 @@ export default class ProductManager {
     }
   }
 
-  async deleteProduct(id) {
+  async deleteById(id) {
     try {
       const productDeleted = await productModel.findByIdAndDelete(id);
       return productDeleted === null

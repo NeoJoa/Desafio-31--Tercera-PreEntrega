@@ -7,7 +7,7 @@ export default class CartsManager {
     this.path = "src/dao/fileManager/cartBase.json";
   }
 
-  async addCart() {
+  async post() {
     const json = await this.getCarts();
     if (json.error) {
       return json;
@@ -20,7 +20,7 @@ export default class CartsManager {
     return await this.writeFile(json);
   }
 
-  async getCarts() {
+  async getAll() {
     try {
       const document = await fs.promises.readFile(this.path);
       const json = JSON.parse(document);
@@ -29,12 +29,12 @@ export default class CartsManager {
       return {
         status: 500,
         error:
-          "Ha ocurrido un error al momento de leer el archivo, este error proviene del servidor y estamos trabajando para arreglarlo.",
+          "An error has occurred at moment of read the file, this error is from server and we're working on resolve the problem.",
       };
     }
   }
 
-  async getCartById(id) {
+  async getById(id) {
     const json = await this.getCarts();
     if (!json.error) {
       const cart = json.find((cart) => cart.id === id);
@@ -42,14 +42,14 @@ export default class CartsManager {
         const cartIndex = json.findIndex((cart) => cart.id === id);
         return { cart, cartIndex };
       } else {
-        return { status: 404, error: "No se encontro el carrito con este ID" };
+        return { status: 404, error: "Not found a cart with this id" };
       }
     } else {
       return json;
     }
   }
 
-  async addProductToCart(cid, pid) {
+  async postProductToCart(cid, pid) {
     const json = await this.getCarts();
     const { cart, cartIndex } = await this.getCartById(cid);
     if (!json.error && !cart.error) {
@@ -77,7 +77,7 @@ export default class CartsManager {
     }
   }
 
-  async removeToCart(cid, pid) {
+  async deleteToCart(cid, pid) {
     const json = await this.getCarts();
     const { cart, cartIndex } = await this.getCartById(cid);
     if (!json.error && !cart.error) {
@@ -92,12 +92,12 @@ export default class CartsManager {
         await this.writeFile(json);
         return {
           status: "Ok",
-          message: "Producto removido del carrito exitosamente",
+          message: "Product removed from cart succesfully",
         };
       } else {
         return {
           status: 404,
-          error: "No se encontro el producto con este ID en este carrito",
+          error: "Not found a product with this id in this cart",
         };
       }
     } else {
@@ -108,12 +108,12 @@ export default class CartsManager {
   async writeFile(data) {
     try {
       await fs.promises.writeFile(this.path, JSON.stringify(data));
-      return { status: "Ok", message: "Agregado exitosamente" };
+      return { status: "Ok", message: "Added successfully" };
     } catch (error) {
       return {
         status: 500,
         error:
-          "Ha ocurrido un error al momento de escribir el archivo, este error proviene del servidor y estamos trabajando para arreglarlo.",
+          "An error has occurred at moment of write the file, this error is from server and we're working on resolve the problem.",
       };
     }
   }

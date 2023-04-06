@@ -8,7 +8,6 @@ import sessionRouter from "./routes/sessionsRoutes.js";
 import productsRoutes from "./routes/productsRoutes.js";
 import cartsRoutes from "./routes/cartsRoutes.js";
 import messageModel from "./dao/models/messages.model.js";
-import mongoose from "mongoose";
 import passport from "passport";
 import initPassport from "./config/passportConfig.js";
 import config from "./config/config.js";
@@ -16,19 +15,10 @@ import config from "./config/config.js";
 const app = express();
 
 const httpServer = app.listen(config.port, () =>
-  console.log("app listen on port", config.port)
+  console.log("App listen on port", config.port)
 );
 
 const io = new Server(httpServer);
-
-mongoose.set("strictQuery", false);
-
-mongoose.connect(config.mongoUrl, (error) => {
-  if (error) {
-    console.log("No hubo conexion", error);
-    process.exit();
-  }
-});
 
 app.engine("handlebars", handlebars.engine());
 
