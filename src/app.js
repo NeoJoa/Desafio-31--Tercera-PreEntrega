@@ -7,6 +7,7 @@ import viewsRouter from "./routes/viewsRoutes.js";
 import sessionRouter from "./routes/sessionsRoutes.js";
 import productsRoutes from "./routes/productsRoutes.js";
 import cartsRoutes from "./routes/cartsRoutes.js";
+import usersRoutes from "./routes/usersRoutes.js";
 import messageModel from "./dao/models/messages.model.js";
 import passport from "passport";
 import initPassport from "./config/passportConfig.js";
@@ -37,6 +38,7 @@ app.use("/", viewsRouter);
 app.use("/api/session", sessionRouter);
 app.use("/api/products", productsRoutes);
 app.use("/api/carts", cartsRoutes);
+app.use("/api/users", usersRoutes);
 
 async function getLogs() {
   return await messageModel.find();

@@ -13,7 +13,6 @@ async function logout() {
     options
   );
   const res = await response.json();
-  console.log(res);
   location.assign("/products");
 }
 

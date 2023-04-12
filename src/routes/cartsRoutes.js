@@ -5,28 +5,28 @@ import * as cartsController from "../controller/carts.controller.js";
 
 const router = Router();
 
-router.get("/", isAdmin, cartsController.getAll);
+router.get("/", cartsController.getAll);
 
-router.get("/:cid", isAdmin, cartsController.getById);
+router.get("/:cid", cartsController.getById);
 
-router.post("/", isAdmin, cartsController.post);
+router.post("/", cartsController.post);
 
-router.post("/:cid/products/:pid", isUser, cartsController.postProductToCart);
+router.post("/:cid/products/:pid", cartsController.postProductToCart);
 
-router.post("/:cid/purchase", isUser, cartsController.purchase);
+router.post("/:cid/purchase", cartsController.purchase);
 
-router.put("/:cid/products", isUser, cartsController.putProducts);
+router.put("/:cid/products", cartsController.putProducts);
 
-router.put("/:cid/products/:pid", isUser, cartsController.putProductQuantity);
+router.put("/:cid/products/:pid", cartsController.putProductQuantity);
 
 router.delete(
   "/:cid/products/:pid",
-  isUser,
+
   cartsController.deleteProductToCart
 );
 
-router.delete("/:cid/products", isUser, cartsController.deleteProducts);
+router.delete("/:cid/products", cartsController.deleteProducts);
 
-router.delete("/:cid", isAdmin, cartsController.deleteById);
+router.delete("/:cid", cartsController.deleteById);
 
 export default router;

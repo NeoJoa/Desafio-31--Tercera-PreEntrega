@@ -19,7 +19,6 @@ export const passportCallback = (strategy) => {
   return async (req, res, next) => {
     passport.authenticate(strategy, function (error, user, info) {
       if (info) req.info = info.message || info.toString();
-      console.log(info);
       if (error) return next(error);
       if (!user) {
         return res.send({

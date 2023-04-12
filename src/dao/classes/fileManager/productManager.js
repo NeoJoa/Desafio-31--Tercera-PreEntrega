@@ -1,20 +1,62 @@
 import fs from "fs";
+import { faker } from "@faker-js/faker";
+
 export default class ProductManager {
   constructor() {
-    this.path = "src/dao/fileManager/productBase.json";
+    this.path = "src/dao/classes/fileManager/productBase.json";
   }
 
-  async getProducts(limit) {
+  async getAll(query, limit = 10, page = 1, sort) {
     try {
       const document = await fs.promises.readFile(this.path);
-      const json = JSON.parse(document);
-      if (limit) {
-        if (limit <= json.length) json.length = limit;
-        return json;
-      } else {
-        return json;
+      let products = JSON.parse(document);
+      const quantityOfProducts = products.length;
+      const totalPages = Math.floor(quantityOfProducts / limit);
+      const hasPrevPage = page > 1;
+      const hasNextPage = page - totalPages ? true : false;
+      const prevPage = hasPrevPage ? page - 1 : null;
+      const nextPage = hasNextPage ? page + 1 : null;
+      let nextLink;
+      let prevLink;
+      if (hasNextPage)
+        nextLink = `http://localhost:8080/api/products/?${
+          query ? "query=" + query + "&" : ""
+        }${"limit=" + limit}${"&page=" + (+page + 1)}${
+          sort ? "&sort=" + sort : ""
+        }`;
+      if (hasPrevPage)
+        prevLink = `http://localhost:8080/api/products/?${
+          query ? "query=" + query + "&" : ""
+        }${"limit=" + limit}${"&page=" + (+page - 1)}${
+          sort ? "&sort=" + sort : ""
+        }`;
+      if (query) {
+        query = JSON.parse(query);
+        for (const prop in query) {
+          products = products.filter(
+            (product) => product[prop] === query[prop]
+          );
+        }
       }
+      if (page > 1) products.splice(0, limit * page - 1);
+      if (limit && limit <= products.length) products.length = limit;
+
+      return {
+        status: "success",
+        payload: products,
+        totalDocs: quantityOfProducts,
+        limit,
+        totalPages,
+        page,
+        hasPrevPage,
+        hasNextPage,
+        prevPage,
+        nextPage,
+        prevLink,
+        nextLink,
+      };
     } catch (error) {
+      console.log(error);
       return {
         status: 500,
         error:
@@ -23,127 +65,90 @@ export default class ProductManager {
     }
   }
 
-  async addProduct(product) {
-    const {
-      title,
-      description,
-      code,
-      price,
-      status,
-      stock,
-      category,
-      thumbnails,
-    } = product;
-    if (
-      title &&
-      description &&
-      price &&
-      thumbnails &&
-      code &&
-      stock &&
-      status &&
-      category
-    ) {
-      const json = await this.getProducts();
-      if (!json.error) {
-        let id = json.length + 1;
-        const product = {
-          title,
-          description,
-          price,
-          category,
-          thumbnails,
-          status,
-          code,
-          stock,
-          id,
-        };
-        if (json.find((prod) => prod.id === product.id)) product.id++;
-        const exist = json.find(
-          (prod) => prod.id === product.id || prod.code === product.code
-        );
-        if (!exist) {
-          json.push(product);
-          await this.writeFile(json);
-          return { status: "Ok", message: "Product added successfully" };
-        } else {
-          return {
-            status: 400,
-            error: "Already exist a product with this params",
-          };
-        }
-      } else {
-        return json;
-      }
-    } else {
-      return { status: 400, error: "Missing values in the request" };
-    }
-  }
-
-  async getProductById(id) {
-    const json = await this.getProducts();
-    if (!json.error) {
-      const product = json.find((prod) => prod.id === id);
-      if (product) {
-        return product;
-      } else {
+  async post(product) {
+    try {
+      const getResponse = await this.getAll();
+      if (getResponse.error) return getResponse;
+      const products = getResponse.payload;
+      const existProduct = products.find(
+        (dbProduct) => dbProduct.code === product.code
+      );
+      if (existProduct)
         return {
-          status: 404,
-          error: "Not found a product with this id",
+          status: 400,
+          error: `Product with code ${product.code} already exist`,
         };
-      }
-    } else {
-      return json;
+      product.id = faker.database.mongodbObjectId();
+      products.push(product);
+      await this.writeFile(products);
+      return {
+        status: "success",
+        message: "Product posted successfully",
+        payload: product,
+      };
+    } catch (error) {
+      return {
+        status: 500,
+        error: "Error from server",
+      };
     }
   }
 
-  async updateProduct(id, object) {
-    const json = await this.getProducts();
-    if (!json.error) {
-      if (id && object) {
-        if (!object.id) {
-          const product = json.find((product) => product.id === id);
-          if (product) {
-            const productIndex = json.findIndex((product) => product.id === id);
-            const newProduct = { ...product, ...object };
-            json.splice(productIndex, 1, newProduct);
-            await this.writeFile(json);
-            return { status: "Ok", message: "Product updated successfully" };
-          } else {
-            return {
-              status: 400,
-              error: "Isn't possible change the id of a product",
-            };
-          }
-        } else {
-          return { status: 400, error: "Missing values in the request" };
-        }
-      } else {
-        return { status: "404", error: "Not found a product with this id" };
-      }
-    } else {
-      return json;
+  async getById(id) {
+    try {
+      const getResponse = await this.getAll();
+      if (getResponse.error) return getResponse;
+      const products = getResponse.payload;
+      const productFinded = products.find((product) => product.id === id);
+      return productFinded
+        ? productFinded
+        : { status: 404, error: "Product not found" };
+    } catch (error) {
+      return { status: 500, error: "Error from server" };
     }
   }
 
-  async deleteProduct(id) {
-    if (id) {
-      const json = await this.getProducts();
-      if (!json.error) {
-        const product = json.find((product) => product.id === id);
-        if (product) {
-          const productIndex = json.findIndex((product) => product.id === id);
-          json.splice(productIndex, 1);
-          await this.writeFile(json);
-          return { status: "Ok", message: "Product deleted successfully" };
-        } else {
-          return { status: 404, error: "Not found a product with this id" };
-        }
-      } else {
-        return json;
+  async putById(id, object) {
+    try {
+      const getResponse = await this.getAll();
+      if (getResponse.error) return getResponse;
+      const products = getResponse.payload;
+      let product = products.find((dbProduct) => dbProduct.id === id);
+      if (!product) return { status: 404, error: "Product not found" };
+      const productIndex = products.findIndex(
+        (dbProduct) => dbProduct.id === id
+      );
+      for (const prop in object) {
+        if (object[prop] !== undefined) product[prop] = object[prop];
       }
-    } else {
-      return { status: 400, error: "Missing values in the request" };
+      products.splice(productIndex, 1, product);
+      await this.writeFile(products);
+      return {
+        status: "Ok",
+        message: "Product updated successfully",
+        payload: product,
+      };
+    } catch (error) {
+      console.log(error);
+      return { status: 500, error: "Error from server" };
+    }
+  }
+
+  async deleteById(id) {
+    try {
+      const getResponse = await this.getAll();
+      if (getResponse.error) return getResponse;
+      const products = getResponse.payload;
+      const product = products.find((product) => product.id === id);
+      if (!product) return { status: 404, error: "Product not found" };
+      const productIndex = products.findIndex(
+        (dbProduct) => dbProduct.id === id
+      );
+      products.splice(productIndex, 1);
+      await this.writeFile(products);
+      return { status: "Ok", message: "Product deleted successfully" };
+    } catch (error) {
+      return { status: 500, error: "Error from server" };
     }
   }
 

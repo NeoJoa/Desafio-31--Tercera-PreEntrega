@@ -16,7 +16,6 @@ recoverForm.addEventListener("submit", (evt) => {
         recoverForm.firstChild.textContent = `${res.error}`;
         return console.log(res.error);
       } else {
-        console.log(res);
         return location.assign("http://localhost:8080/login");
       }
     });

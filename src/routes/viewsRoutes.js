@@ -1,11 +1,8 @@
 import { Router } from "express";
 import { isUser } from "../middlewares/isUser.js";
-import ProductManager from "../dao/classes/dbManager/ProductsManager.js";
-import CartsManager from "../dao/classes/dbManager/CartsManager.js";
+import { ProductsService, CartsService } from "../dao/repositories/index.js";
 
 const router = Router();
-const pm = new ProductManager();
-const cm = new CartsManager();
 
 router.get("/", async (req, res) => {
   const isLogin = req.cookies["coderCookieToken"] ? true : false;
@@ -21,7 +18,7 @@ router.get("/products?", async (req, res) => {
   const isLogin = req.cookies["coderCookieToken"] ? true : false;
   const user = req.user;
   const { query, limit, page, sort } = req.query;
-  const response = await pm.getAll(query, limit, page, sort);
+  const response = await ProductsService.getAll(query, limit, page, sort);
   let {
     payload,
     hasNextPage,
@@ -54,13 +51,11 @@ router.get("/products?", async (req, res) => {
   });
 });
 
-router.get("/carts/:cid", async (req, res) => {
-  const isLogin = req.cookies["coderCookieToken"] ? true : false;
-  const id = req.params.cid;
-  const cart = await cm.getById(id);
-  return !cart.error
-    ? res.render("cart", { cart, isLogin })
-    : res.render("404", {});
+router.get("/cart", isUser, async (req, res) => {
+  const id = req.user.cartId;
+  const cart = await CartsService.getById(id);
+  if (cart.error) return res.status(cart.error).send(cart);
+  return res.render("cart", { cart, isLogin: true });
 });
 
 router.get("/register", (req, res) => {
@@ -76,8 +71,7 @@ router.get("/recover", (req, res) => {
 });
 
 router.get("/profile", isUser, (req, res) => {
-  const isLogin = req.user ? true : false;
-  return isLogin ? res.render("profile", { isLogin }) : res.redirect("/login");
+  return res.render("profile", { isLogin: true });
 });
 
 export default router;

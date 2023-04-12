@@ -5,6 +5,8 @@ import jwt from "jsonwebtoken";
 import { passportCallback } from "../utils.js";
 import config from "../config/config.js";
 import ClientUser from "../dao/DTOs/ClientUser.js";
+import { isUser } from "../middlewares/isUser.js";
+import { CartsService, UsersService } from "../dao/repositories/index.js";
 
 const router = Router();
 
@@ -65,11 +67,20 @@ router.post(
 );
 
 router.get("/failLogin", passportCallback("login"), async (req, res) => {
-  console.log("failLogin");
   res.send({ error: "Fail login" });
 });
 
-router.post("/logout", async (req, res) => {
+router.post("/logout", isUser, async (req, res) => {
+  const cartId = req.user.cartId;
+  const deleteCartResponse = await CartsService.deleteById(cartId);
+  if (deleteCartResponse.error)
+    return res.status(deleteCartResponse.status).send(deleteCartResponse);
+  const userUpdateResponse = await UsersService.putBy(
+    { id: req.user.id },
+    { cartId: [] }
+  );
+  if (userUpdateResponse.error)
+    return res.status(userUpdateResponse.status).send(userUpdateResponse);
   res.clearCookie("coderCookieToken").send({ message: "Logout success" });
 });
 

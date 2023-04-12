@@ -38,9 +38,9 @@ export default class UsersManager {
     }
   }
 
-  async put(id, object) {
+  async putBy(param, object) {
     try {
-      const productUpdated = await usersModel.findByIdAndUpdate(id, object, {
+      const productUpdated = await usersModel.findOneAndUpdate(param, object, {
         new: true,
       });
       return productUpdated === null
@@ -52,24 +52,24 @@ export default class UsersManager {
     } catch (error) {
       return {
         status: 500,
-        error: `An error occurred while updating the product with id ${id}`,
+        error: `Error from server`,
       };
     }
   }
 
-  async deleteById(id) {
+  async deleteBy(param) {
     try {
       const productDeleted = await usersModel.findByIdAndDelete(id);
       return productDeleted === null
         ? {
             status: 404,
-            error: `Product with id ${id} not found`,
+            error: `User not found`,
           }
-        : { status: 200, message: `Product with ${id} deleted succesfully` };
+        : { status: 200, message: `User deleted succesfully` };
     } catch (error) {
       return {
         status: 500,
-        error: `An error occurred while updating the product with id ${id}`,
+        error: `Error from server`,
       };
     }
   }

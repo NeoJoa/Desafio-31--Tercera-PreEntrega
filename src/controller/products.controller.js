@@ -11,6 +11,19 @@ export const post = async (req, res) => {
     category,
     thumbnails,
   } = req.body;
+
+  if (
+    !title ||
+    !description ||
+    !code ||
+    !price ||
+    !status ||
+    !stock ||
+    !category ||
+    !thumbnails
+  )
+    return res.status(400).send({ status: 400, error: "Missing values" });
+
   const product = {
     title,
     description,
@@ -30,7 +43,10 @@ export const post = async (req, res) => {
 };
 
 export const getAll = async (req, res) => {
-  const { query, limit, page, sort } = req.query;
+  let { query, limit, page, sort } = req.query;
+  if (limit) limit = +limit;
+  if (page) page = +page;
+  if (sort) sort = +sort;
   const getResponse = await ProductsService.getAll(query, limit, page, sort);
 
   return !getResponse.error
@@ -41,7 +57,6 @@ export const getAll = async (req, res) => {
 export const getById = async (req, res) => {
   const id = req.params.pid;
   const getResponse = await ProductsService.getById(id);
-
   return !getResponse.error
     ? res.send(getResponse)
     : res.status(getResponse.status).send(getResponse);
@@ -49,7 +64,26 @@ export const getById = async (req, res) => {
 
 export const putById = async (req, res) => {
   const id = req.params.pid;
-  const object = req.body;
+  const {
+    title,
+    description,
+    code,
+    price,
+    status,
+    stock,
+    category,
+    thumbnails,
+  } = req.body;
+  const object = {
+    title,
+    description,
+    code,
+    price,
+    status,
+    stock,
+    category,
+    thumbnails,
+  };
   const putResponse = await ProductsService.putById(id, object);
 
   return !putResponse.error

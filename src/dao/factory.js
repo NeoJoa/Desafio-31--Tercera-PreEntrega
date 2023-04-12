@@ -30,7 +30,9 @@ switch (config.persistence) {
     Users = UsersMongo;
     break;
 
-  case "memory":
+  case "filesystem":
+    console.log("Working with filesystem");
+
     const { default: CartsMemory } = await import(
       "./classes/fileManager/cartsManager.js"
     );

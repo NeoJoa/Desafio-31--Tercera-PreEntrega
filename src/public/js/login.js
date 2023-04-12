@@ -11,11 +11,9 @@ loginForm.addEventListener("submit", (e) => {
     .then((res) => res.json())
     .then((res) => {
       if (res.error) {
-        console.log(res);
         loginForm.firstChild.textContent = `${res.error}`;
         return;
       } else {
-        console.log(res);
         location.assign("/products");
       }
     });

@@ -16,7 +16,6 @@ registerForm.addEventListener("submit", (evt) => {
         registerForm.firstChild.textContent = `${res.error}`;
         return console.log(res.error);
       } else {
-        console.log(res);
         location.assign("login");
       }
     });

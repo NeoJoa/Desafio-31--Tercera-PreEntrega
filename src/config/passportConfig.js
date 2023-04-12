@@ -3,15 +3,16 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { createHash, isCorrect } from "../utils.js";
 import githubService from "passport-github2";
-import { UsersService } from "../dao/repositories/index.js";
+import { CartsService, UsersService } from "../dao/repositories/index.js";
 import nodemailer from "nodemailer";
+import cartModel from "../dao/models/carts.model.js";
 
 const transport = nodemailer.createTransport({
   service: "gmail",
   port: 5087,
   auth: {
     user: "joaquinaquino999@gmail.com",
-    pass: "sstlqracohnpmkgz",
+    pass: "cyjmsqaoicdgvxzx",
   },
 });
 
@@ -99,7 +100,7 @@ const initPassport = () => {
             from: "joaquinaquino999@gmail.com",
             to: `${email}`,
             subject: "Email de prueba desde servidor backend",
-            text: `Usuario registrado correctamente. \n Credenciales: \n Email:${email} \n Password: ${password}`,
+            text: `Usuario registrado correctamente. \n Credenciales: Email:${email} Password: ${password}`,
           });
 
           const result = await UsersService.post(newUser);
@@ -121,19 +122,35 @@ const initPassport = () => {
             email === "adminCoder@coder.com" &&
             password === "adminCod3r123"
           ) {
+            const postCartResponse = await CartsService.post();
+            if (postCartResponse.error)
+              return done(null, false, { message: "Cart creation failed" });
+            const cartId = postCartResponse.id;
             const user = {
               email,
               password,
+              cartId,
               role: "admin",
             };
             return done(null, user);
           }
-          const user = await UsersService.getBy({ email });
+          let user = await UsersService.getBy({ email });
           if (!user) {
             return done(null, false, { message: "Email not registered" });
           }
           if (!isCorrect(user, password))
             return done(null, false, { message: "Incorrect password" });
+          const postCartResponse = await CartsService.post();
+          if (postCartResponse.error)
+            return done(null, false, { message: "Cart creation failed" });
+          const cartId = postCartResponse.id;
+          user.cartId = cartId;
+          const updateUserResponse = await UsersService.putBy(
+            { email },
+            { cartId: cartId }
+          );
+          if (updateUserResponse.error)
+            return done(null, false, { message: "Failed update user" });
           return done(null, user);
         } catch (error) {
           return done(error);

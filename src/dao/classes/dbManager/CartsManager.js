@@ -28,13 +28,19 @@ export default class CartsManager {
   async getById(id) {
     try {
       const cart = await cartModel.findById(id).lean().populate("products.pid");
-      return cart === null
-        ? {
-            status: 404,
-            error: `Cart with id ${id} not found`,
-          }
-        : cart.products;
+      if (cart === null)
+        return {
+          status: 404,
+          error: `Cart with id ${id} not found`,
+        };
+      const cartProducts = cart.products.map((cartProduct) => {
+        const productPid = { ...cartProduct.pid };
+        const quantity = cartProduct.quantity;
+        return { ...productPid, quantity };
+      });
+      return cartProducts;
     } catch (error) {
+      console.log(error);
       return {
         status: 500,
         error: `An error occurred while obtaining the cart with id ${id}`,
@@ -266,14 +272,14 @@ export default class CartsManager {
         code: faker.database.mongodbObjectId(),
         purchaseDateTime: new Date().toLocaleString(),
         amount: totalAmount,
-        purchaser: purchaser,
+        purchaser: "yo",
       });
       return { payload: { ticket, productsInCart } };
     } catch (error) {
       console.log(error);
       return {
         status: 500,
-        error: `An error occurred while deleting products`,
+        error: `An error occurred while purchase`,
       };
     }
   }

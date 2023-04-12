@@ -30,7 +30,6 @@ export default class ProductManager {
         limit: result.limit,
         totalPages: result.totalPages,
         page: result.page,
-        pagingCounter: result.pagingCounter,
         hasPrevPage: result.hasPrevPage,
         hasNextPage: result.hasNextPage,
         prevPage: result.prevPage,
@@ -39,6 +38,7 @@ export default class ProductManager {
         nextLink: result.nextLink,
       };
     } catch (error) {
+      console.log(error);
       return {
         status: 500,
         error:

@@ -15,11 +15,11 @@ export default class Users {
     return await this.dao.getBy(param);
   }
 
-  async put(id, object) {
-    return await this.dao.put(id, object);
+  async putBy(param, object) {
+    return await this.dao.putBy(param, object);
   }
 
-  async deleteById(id) {
-    return await this.dao.deleteById(id);
+  async deleteBy(param) {
+    return await this.dao.deleteBy(param);
   }
 }
