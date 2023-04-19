@@ -22,12 +22,12 @@ export default class SessionController {
     postRegister = async(req, res) => {
         console.log(req.user);
         await transport.sendMail({
-            from: 'benjabastan@gmail.com',
+            from: 'joaquinaquino999@gmail.com',
             to: req.user.email,
-            subject: 'Se ha creado una cuenta en Ecommerce Coder',
+            subject: 'Se ha creado una cuenta en JA Coder',
             html: `
             <div style="background-color: black; color: green; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                <h1>Bienvenido a Ecommerce Coder</h1>
+                <h1>Bienvenido a JA Coder</h1>
             </div>
             `
         })
